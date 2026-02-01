@@ -1,72 +1,30 @@
 ---
 name: global-speed-checker
-version: 0.1.0
-description: Run global performance checks on HTTP endpoints from multiple regions worldwide. Use when users want to check speed, latency, performance, or test endpoints globally. Triggers on "check speed", "global test", "performance check", "latency test", "test from all regions", "global speed checker", or similar queries about endpoint performance from multiple geographic locations.
+version: 0.2.0
+description: Run global performance checks on HTTP endpoints from multiple regions worldwide. Use when users want to check speed, latency, performance, or test endpoints globally.
 ---
 
 # Global Speed Checker
 
-Check HTTP endpoint performance from 28 regions worldwide using the `/play/checker/api` streaming endpoint.
+Check HTTP endpoint performance from 28 regions worldwide.
 
 ## When to Use
 
-Trigger this skill when users ask about endpoint performance testing from multiple regions:
 - "check the speed of https://api.example.com"
-- "test https://example.com/api performance globally"
-- "run a speed check on https://api.com with POST method"
-- "check latency for https://api.example.com with auth headers"
-- "how fast is my API from different regions"
 - "test https://example.com globally"
+- "how fast is my API from different regions"
 
 ## Workflow
 
-**CRITICAL OUTPUT FORMAT REQUIREMENT**: All results MUST be displayed as a markdown table (never as a list). The table format is mandatory and non-negotiable.
-
-**CRITICAL PARSING REQUIREMENT**: NEVER use bash commands (sed, awk, head, tail, jq) to parse the JSON response. Parse the JSON directly from the curl output by splitting lines and reading JSON objects.
-
-**Default output**: Display only the markdown table with a brief summary line. Ask if the user wants detailed insights or structured JSON data. Only generate additional sections if explicitly requested.
-
 ### 1. Parse Request
 
-Extract from the user's natural language:
-- **URL** (required): Any valid HTTP/HTTPS URL
-- **Method** (optional): GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS (default: GET)
-- **Headers** (optional): Parse patterns like "with header Authorization: Bearer token" or "with headers Content-Type: application/json and X-API-Key: secret"
-- **Body** (optional): Parse patterns like "with body {...}" or "with JSON body {...}"
+Extract from user's message:
+- **URL** (required)
+- **Method** (optional, default: GET)
+- **Headers** (optional)
+- **Body** (optional)
 
-**Parsing examples:**
-- "check https://api.com" → `{url: "https://api.com", method: "GET"}`
-- "test POST to https://api.com" → `{url: "https://api.com", method: "POST"}`
-- "test POST to https://api.com with header Auth: Bearer 123" → `{url: "https://api.com", method: "POST", headers: [{key: "Auth", value: "Bearer 123"}]}`
-- "check https://api.com with body {\"test\": true}" → `{url: "https://api.com", method: "GET", body: "{\"test\": true}"}`
-
-### 2. Call the API
-
-Make a POST request to the streaming endpoint:
-
-```
-POST https://openstatus.dev/play/checker/api
-Content-Type: application/json
-
-{
-  "url": "https://example.com",
-  "method": "GET",
-  "headers": [{"key": "Authorization", "value": "Bearer token"}],
-  "body": "{\"query\": \"test\"}"
-}
-```
-
-The API returns a streaming response where each line is a JSON object.
-
-### 3. Make the API Call and Wait for Results
-
-Show initial status message, then call the API:
-
-```markdown
-Running global speed check on https://example.com...
-```
-
-Use curl to call the streaming endpoint (typical response time: 2-5 seconds):
+### 2. Make API Call
 
 ```bash
 curl -s -L -X POST "https://openstatus.dev/play/checker/api" \
@@ -74,189 +32,66 @@ curl -s -L -X POST "https://openstatus.dev/play/checker/api" \
   -d '{"url":"https://example.com","method":"GET"}'
 ```
 
-**Important**: Use `-s` flag to suppress curl progress output. The API streams results but the Bash tool waits for completion before returning, so true real-time updates aren't possible. Results will appear all at once after 2-5 seconds.
+Returns newline-delimited JSON. Each line is a region result. Final line is the check ID.
 
-### 4. Parse Stream Response
+### 3. Display Results
 
-The API returns newline-delimited JSON where each line is a JSON object. Parse the curl output directly:
+Create markdown table sorted by latency (fastest first):
+- **Columns**: Region | Latency | Status | DNS | Connection | TLS | TTFB | Transfer
+- **Region**: Map code to name (e.g., `fra` → "Frankfurt (Fly) 🇩🇪")
+- **Timing phases**: Calculate from `timing` object (e.g., DNS = `dnsDone - dnsStart`)
 
-1. **Split the response by newlines** to get individual JSON objects
-2. **Parse each line as JSON** - most lines are region results, the last line is the check ID
-3. **Extract region data** from lines with `region`, `latency`, `status`, and `timing` fields
-4. **Extract check ID** from the final line:
-   - If it's a plain 32-character hex string: `"a1b2c3d4e5f6..."`
-   - If it's a JSON object: `{"type":"complete","id":"a1b2c3d4e5f6..."}`
-
-**Example response structure:**
-```
-{"region":"fra","type":"http","state":"success","status":200,"latency":124,"timing":{...}}
-{"region":"sin","type":"http","state":"success","status":200,"latency":256,"timing":{...}}
-...
-a1b2c3d4e5f6789012345678901234567890abcd
-```
-
-**No bash parsing needed** - just parse the JSON lines directly and extract the data you need.
-
-### 5. Display Results as Markdown Table
-
-Parse all region results from the JSON lines and display as a clean markdown table **sorted by latency (fastest first)**:
+### 4. Add Summary
 
 ```markdown
-| Region | Latency | Status | DNS | Connection | TLS | TTFB | Transfer |
-|--------|---------|--------|-----|------------|-----|------|----------|
-| Frankfurt 🇩🇪 | 124ms | 200 | 8ms | 24ms | 31ms | 45ms | 16ms |
-| Singapore 🇸🇬 | 256ms | 200 | 12ms | 45ms | 52ms | 98ms | 49ms |
-| Sydney 🇦🇺 | 342ms | 200 | 15ms | 67ms | 78ms | 112ms | 70ms |
-| ... | ... | ... | ... | ... | ... | ... | ... |
+**Fastest**: [region] ([latency]) • **Slowest**: [region] ([latency]) • **Average**: [avg]ms • **Success rate**: [x/y] ([%])
+
+[View and share results](https://openstatus.dev/play/checker/[check-id])
 ```
 
-**Critical formatting requirements:**
-- **MUST use markdown table format** - Lists or other formats are NOT acceptable
-- **MUST sort by latency** (fastest regions at top)
-- **MUST include all timing phase columns** (DNS, Connection, TLS, TTFB, Transfer)
-- **Display region name**: Use "location (provider) flag" from the Available Regions mapping
-  - `fra` → "Frankfurt (Fly) 🇩🇪"
-  - `koyeb_sin` → "Singapore (Koyeb) 🇸🇬"
-  - `railway_us-west2` → "California (Railway) 🇺🇸"
-- **Format latency**: `124ms` (integer + "ms")
-- **Calculate timing phases**: Parse the `timing` object from each region's JSON and calculate:
-  - DNS: `timing.dnsDone - timing.dnsStart`
-  - Connection: `timing.connectDone - timing.connectStart`
-  - TLS: `timing.tlsHandshakeDone - timing.tlsHandshakeStart`
-  - TTFB: `timing.firstByteDone - timing.firstByteStart`
-  - Transfer: `timing.transferDone - timing.transferStart`
-- **Do NOT use bash commands** to parse JSON - parse it directly from the curl output
+Then ask: `Would you like to see detailed insights or structured JSON data?`
 
-### 6. Add Brief Summary
+### 5. Optional: Insights (if requested)
 
-After the table, add a single-line summary with the key metrics and shareable link:
+Analyze results (3-5 observations):
+- Status codes, regional gaps, TLS/TTFB/DNS performance
+- See [references/insights-generation-guide.md](references/insights-generation-guide.md)
 
-```markdown
-**Fastest**: Frankfurt 🇩🇪 (124ms) • **Slowest**: Sydney 🇦🇺 (342ms) • **Average**: 203ms • **Success rate**: 100% (28/28)
+### 6. Optional: JSON Export (if requested)
 
-[View and share results](https://openstatus.dev/play/checker/abc123def456...)
-```
+Provide complete results as structured JSON.
 
-**Extract the check ID** from the final line of the stream response (32-character hex string) and include it in the shareable link:
-- Format: `https://openstatus.dev/play/checker/[id]`
-- Example: `https://openstatus.dev/play/checker/a1b2c3d4e5f6...` (full 32-char ID)
+## Region Mapping
 
-### 7. Ask for Additional Details
+Common codes:
+- `fra` → Frankfurt (Fly) 🇩🇪
+- `iad` → Virginia (Fly) 🇺🇸
+- `sin` → Singapore (Fly) 🇸🇬
+- `lhr` → London (Fly) 🇬🇧
+- `koyeb_fra` → Frankfurt (Koyeb) 🇩🇪
+- `railway_us-west2` → California (Railway) 🇺🇸
 
-After displaying the table and summary, ask the user if they want more information:
-
-```markdown
-Would you like to see detailed insights or structured JSON data?
-```
-
-Only generate the following sections if the user explicitly asks for them.
-
-### 8. Generate Performance Insights (Optional)
-
-**Only generate if requested.** Analyze the results and generate 3-5 actionable observations.
-
-**For comprehensive insight patterns, thresholds, and examples**, see [references/insights-generation-guide.md](references/insights-generation-guide.md).
-
-**Quick insight patterns:**
-- Status: All 2xx → "✓ All regions returned success", Some fail → "⚠ X regions returned errors"
-- Regional gaps: One continent >1.5x slower → "⚠ APAC regions are 2.3x slower than Europe average"
-- TLS: Avg <40ms → "✓ TLS optimized", Avg >60ms → "⚠ TLS could be improved"
-- TTFB/DNS: TTFB >100ms → "⚠ High TTFB", DNS >50ms → "⚠ DNS resolution slow"
-
-### 9. Export Structured Data (Optional)
-
-**Only generate if requested.** Provide the complete results as JSON for programmatic use.
+Full list: [references/regions-detailed.md](references/regions-detailed.md)
 
 ## Error Handling
 
-### Rate Limit (429)
+**Rate Limit (429)**: Show limit, remaining, reset time
 
-When the API returns 429 status, parse the error response and display:
+**Invalid Request (400)**: Show error message and details from response
 
-```markdown
-⚠️ **Rate Limit Exceeded**
-
-You've reached the limit of 10 requests per minute.
-Please wait 45 seconds before trying again.
-
-Rate limit info:
-- Limit: 10 requests / 60 seconds
-- Remaining: 0
-- Resets at: 2026-02-01 12:45:30 UTC
-```
-
-Parse reset time from error response: `reset` timestamp field.
-Calculate wait time: `Math.ceil((reset - Date.now()) / 1000)` seconds.
-
-### Invalid Request (400)
-
-Display the error message clearly with details:
-
-```markdown
-❌ **Invalid Request**
-
-URL is required and must be valid.
-
-Details:
-- Field: url
-- Issue: Invalid URL format
-```
-
-Parse error details from response `details.issues` array.
-
-### No Client IP (400)
-
-```markdown
-❌ **Unable to Process Request**
-
-Cannot determine client IP address. This may occur when:
-- Using a VPN that doesn't forward IP headers
-- Running behind a proxy without proper configuration
-- Network configuration blocking IP detection
-```
-## Region Mapping Reference
-
-The API tests from 28 regions across Fly.io, Koyeb, and Railway. Key regions to know:
-
-**Common codes:**
-- `fra` → Frankfurt 🇩🇪, `sin` → Singapore 🇸🇬, `nrt` → Tokyo 🇯🇵
-- `iad` → Virginia 🇺🇸, `lhr` → London 🇬🇧, `syd` → Sydney 🇦🇺
-
-**For complete region mapping with continents and provider details**, see [references/regions-detailed.md](references/regions-detailed.md).
-
-## Timing Phases Reference
-
-Each region returns timing breakdown:
-- **DNS**: Domain resolution time
-- **Connection**: TCP connection time
-- **TLS**: SSL/TLS handshake time
-- **TTFB**: Time to first byte (server processing)
-- **Transfer**: Response download time
-
-**Total latency** = DNS + Connection + TLS + TTFB + Transfer
-
-**For detailed timing explanations, optimization strategies, and interpretation**, see [references/timing-phases.md](references/timing-phases.md).
+**No Client IP (400)**: Explain VPN/proxy may cause this
 
 ## Reference Files
 
-Use these reference files for detailed information when needed:
-
-- **[regions-detailed.md](references/regions-detailed.md)** - Complete region mapping with provider details, continent coverage, latency matrix, and deployment strategies. Read when users ask about specific regions or need help interpreting geographic performance patterns.
-
-- **[timing-phases.md](references/timing-phases.md)** - Deep dive into DNS, Connection, TLS, TTFB, and Transfer phases with optimization strategies and interpretation examples. Read when users need help understanding timing breakdowns or optimizing specific phases.
-
-- **[insights-generation-guide.md](references/insights-generation-guide.md)** - Comprehensive patterns for generating insights with thresholds, examples, and priority ordering. Read when generating detailed insights (Step 8).
-
-- **[performance-benchmarks.md](references/performance-benchmarks.md)** - Expected performance ranges by endpoint type (static site, REST API, GraphQL, serverless, etc.) and distance. Read when users ask "is this performance good?" or need to set expectations.
-
-- **[common-issues.md](references/common-issues.md)** - Diagnostic playbook for troubleshooting slow DNS, connection issues, TLS problems, TTFB bottlenecks, and regional gaps. Read when performance is poor and users need help diagnosing root cause.
+- [regions-detailed.md](references/regions-detailed.md) - Complete region mapping
+- [timing-phases.md](references/timing-phases.md) - Timing explanations and optimization
+- [insights-generation-guide.md](references/insights-generation-guide.md) - Insight patterns
+- [performance-benchmarks.md](references/performance-benchmarks.md) - Expected performance ranges
+- [common-issues.md](references/common-issues.md) - Troubleshooting guide
 
 ## Notes
 
-- The API tests from 28 active regions across three cloud providers (Fly.io, Koyeb, Railway)
-- Each check runs in parallel, so total time ≈ slowest region response time (~2-5 seconds typically)
-- Results are cached for 7 days and can be retrieved by check ID (the 32-char hex string in the final chunk)
-- Rate limit is per IP address: **10 requests per 60 seconds**
-- Some locations have multiple providers (e.g., Frankfurt has both Fly and Koyeb regions)
-- The API runs on edge runtime for fast global distribution
-- Rate limit info is included in the first stream chunk (metadata) so you can warn users proactively
+- Tests from 28 regions (Fly.io, Koyeb, Railway)
+- Takes ~2-5 seconds
+- Rate limit: 10 requests per 60 seconds
+- Results cached for 7 days
