@@ -10,8 +10,8 @@ Check HTTP endpoint performance from 28 regions worldwide.
 
 ## When to Use
 
-- "check the speed of https://api.example.com"
-- "test https://example.com globally"
+- "check the speed of https://openstatus.dev"
+- "test https://openstatus.dev globally"
 - "how fast is my API from different regions"
 
 ## Workflow
