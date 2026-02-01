@@ -1,6 +1,6 @@
 ---
 name: global-speed-checker
-version: 0.2.0
+version: 0.3.0
 description: Run global performance checks on HTTP endpoints from multiple regions worldwide. Use when users want to check speed, latency, performance, or test endpoints globally.
 ---
 
@@ -27,19 +27,22 @@ Extract from user's message:
 ### 2. Make API Call
 
 ```bash
-curl -s -L -X POST "https://openstatus.dev/play/checker/api" \
+curl -s -L -X POST "https://openstatus.dev/play/checker/api?compact=true" \
   -H "Content-Type: application/json" \
   -d '{"url":"https://example.com","method":"GET"}'
 ```
 
-Returns newline-delimited JSON. Each line is a region result. Final line is the check ID.
+The response contains newline-delimited JSON. Each line is a region result. Final line is the check ID.
 
-### 3. Display Results
+**Note**: The `compact=true` parameter reduces response size by removing headers/body and returning calculated timing phases.
 
-Create markdown table sorted by latency (fastest first):
+### 3. Process and Display Results
+
+Parse the response (newline-delimited JSON) and create a markdown table sorted by latency (fastest first):
 - **Columns**: Region | Latency | Status | DNS | Connection | TLS | TTFB | Transfer
-- **Region**: Map code to name (e.g., `fra` → "Frankfurt (Fly) 🇩🇪")
-- **Timing phases**: Calculate from `timing` object (e.g., DNS = `dnsDone - dnsStart`)
+- **Region**: Map code to name using the Read tool to load [references/regions-detailed.md](references/regions-detailed.md) (e.g., `fra` → "Frankfurt (Fly) 🇩🇪")
+- **Timing phases**: In compact mode, timing phases are pre-calculated in the response (dns, connection, tls, ttfb, transfer). Otherwise, calculate from raw `timing` object (e.g., DNS = `dnsDone - dnsStart`)
+- **Sorting**: Sort the parsed results array by latency value before rendering the table
 
 ### 4. Add Summary
 
