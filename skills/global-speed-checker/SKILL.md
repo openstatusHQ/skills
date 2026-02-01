@@ -22,9 +22,9 @@ Trigger this skill when users ask about endpoint performance testing from multip
 
 **CRITICAL OUTPUT FORMAT REQUIREMENT**: All results MUST be displayed as a markdown table (never as a list). The table format is mandatory and non-negotiable.
 
-**Default output**: Display only the markdown table with a brief summary line. Ask if the user wants detailed insights or structured JSON data. Only generate additional sections if explicitly requested.
+**CRITICAL PARSING REQUIREMENT**: NEVER use bash commands (sed, awk, head, tail, jq) to parse the JSON response. Parse the JSON directly from the curl output by splitting lines and reading JSON objects.
 
-**REMEMBER**: All results MUST be presented in markdown table format. Never use lists.
+**Default output**: Display only the markdown table with a brief summary line. Ask if the user wants detailed insights or structured JSON data. Only generate additional sections if explicitly requested.
 
 ### 1. Parse Request
 
@@ -78,29 +78,28 @@ curl -s -L -X POST "https://openstatus.dev/play/checker/api" \
 
 ### 4. Parse Stream Response
 
-The API returns newline-delimited JSON. Each line contains a region result:
+The API returns newline-delimited JSON where each line is a JSON object. Parse the curl output directly:
 
-**Current format** (without type tags - old API):
-```json
-{"region":"fra","type":"http","state":"success","status":200,"latency":124,...}
+1. **Split the response by newlines** to get individual JSON objects
+2. **Parse each line as JSON** - most lines are region results, the last line is the check ID
+3. **Extract region data** from lines with `region`, `latency`, `status`, and `timing` fields
+4. **Extract check ID** from the final line:
+   - If it's a plain 32-character hex string: `"a1b2c3d4e5f6..."`
+   - If it's a JSON object: `{"type":"complete","id":"a1b2c3d4e5f6..."}`
+
+**Example response structure:**
+```
+{"region":"fra","type":"http","state":"success","status":200,"latency":124,"timing":{...}}
+{"region":"sin","type":"http","state":"success","status":200,"latency":256,"timing":{...}}
+...
+a1b2c3d4e5f6789012345678901234567890abcd
 ```
 
-**Enhanced format** (with type tags - when new API is deployed):
-```json
-{"type":"metadata","rateLimit":{"limit":10,"remaining":7,"reset":1706745930000}}
-{"type":"region","data":{...region check...},"index":0}
-{"type":"complete","id":"abc123def456..."}
-```
-
-**Extract the check ID**: The final line contains either:
-- A 32-character hex string (current format), OR
-- A `{"type":"complete","id":"..."}` object (enhanced format)
-
-**Save this ID** - you'll need it to generate the shareable link in step 6.
+**No bash parsing needed** - just parse the JSON lines directly and extract the data you need.
 
 ### 5. Display Results as Markdown Table
 
-Once all results arrive, parse the stream and display as a clean markdown table **sorted by latency (fastest first)**:
+Parse all region results from the JSON lines and display as a clean markdown table **sorted by latency (fastest first)**:
 
 ```markdown
 | Region | Latency | Status | DNS | Connection | TLS | TTFB | Transfer |
@@ -120,12 +119,13 @@ Once all results arrive, parse the stream and display as a clean markdown table 
   - `koyeb_sin` → "Singapore (Koyeb) 🇸🇬"
   - `railway_us-west2` → "California (Railway) 🇺🇸"
 - **Format latency**: `124ms` (integer + "ms")
-- **Calculate timing phases**: Extract from timing object
+- **Calculate timing phases**: Parse the `timing` object from each region's JSON and calculate:
   - DNS: `timing.dnsDone - timing.dnsStart`
   - Connection: `timing.connectDone - timing.connectStart`
   - TLS: `timing.tlsHandshakeDone - timing.tlsHandshakeStart`
   - TTFB: `timing.firstByteDone - timing.firstByteStart`
   - Transfer: `timing.transferDone - timing.transferStart`
+- **Do NOT use bash commands** to parse JSON - parse it directly from the curl output
 
 ### 6. Add Brief Summary
 
@@ -165,40 +165,7 @@ Only generate the following sections if the user explicitly asks for them.
 
 ### 9. Export Structured Data (Optional)
 
-**Only generate if requested.** Provide the complete results as JSON for programmatic use:
-
-```json
-{
-  "url": "https://api.example.com",
-  "method": "GET",
-  "timestamp": 1706745600000,
-  "summary": {
-    "fastest": {"region": "Frankfurt", "code": "fra", "latency": 124},
-    "slowest": {"region": "Sydney", "code": "syd", "latency": 342},
-    "average": 203,
-    "p95": 298,
-    "successRate": 100,
-    "totalRegions": 28
-  },
-  "regions": [
-    {
-      "region": "Frankfurt",
-      "code": "fra",
-      "flag": "🇩🇪",
-      "latency": 124,
-      "status": 200,
-      "timing": {
-        "dns": 8,
-        "connection": 24,
-        "tls": 31,
-        "ttfb": 45,
-        "transfer": 16
-      }
-    }
-    // ... more regions
-  ]
-}
-```
+**Only generate if requested.** Provide the complete results as JSON for programmatic use.
 
 ## Error Handling
 
@@ -247,23 +214,6 @@ Cannot determine client IP address. This may occur when:
 - Running behind a proxy without proper configuration
 - Network configuration blocking IP detection
 ```
-
-### Failed Region Checks
-
-**IMPORTANT**: Failed regions MUST stay in the main table. Do NOT create separate lists or sections for failures.
-
-Show failed regions in the table with error indication:
-
-```markdown
-| Region | Latency | Status | DNS | Connection | TLS | TTFB | Transfer |
-|--------|---------|--------|-----|------------|-----|------|----------|
-| Frankfurt 🇩🇪 | 124ms | 200 | 8ms | 24ms | 31ms | 45ms | 16ms |
-| Tokyo 🇯🇵 | - | Error | - | - | - | - | - |
-| Singapore 🇸🇬 | 256ms | 200 | 12ms | 45ms | 52ms | 98ms | 49ms |
-```
-
-Then mention in the summary: "⚠ 1 region failed to respond (Tokyo 🇯🇵)"
-
 ## Region Mapping Reference
 
 The API tests from 28 regions across Fly.io, Koyeb, and Railway. Key regions to know:
