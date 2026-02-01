@@ -5,7 +5,7 @@ A collection of AI agent skills focused on monitoring tasks.
 ## Quick Start
 
 ```bash
-npx skills add openstatus/skills
+npx skills add openstatusHQ/skills
 ```
 
 ---
