@@ -96,5 +96,5 @@ Full list: [references/regions-detailed.md](references/regions-detailed.md)
 
 - Tests from 28 regions (Fly.io, Koyeb, Railway)
 - Takes ~2-5 seconds
-- Rate limit: 10 requests per 60 seconds
+- Rate limit: 5 requests per 60 seconds
 - Results cached for 7 days
