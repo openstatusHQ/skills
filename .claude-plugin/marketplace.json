@@ -5,17 +5,24 @@
     "url": "https://openstatus.dev"
   },
   "metadata": {
-    "description": "Openstatus skills for Claude Code",
+    "description": "Status page & incident communication skills for AI agents — by OpenStatus",
     "version": "1.0.0",
     "repository": "https://github.com/openstatusHQ/skills"
   },
   "plugins": [
     {
       "name": "openstatus-skills",
-      "description": "Openstatus skills for Claude Code",
+      "description": "Status page & incident communication skills for AI agents — by OpenStatus",
       "source": "./",
       "strict": false,
-      "skills": ["./skills/global-speed-checker"]
+      "skills": [
+        "./skills/status-page-context",
+        "./skills/incident-communication",
+        "./skills/postmortem",
+        "./skills/maintenance",
+        "./skills/status-report",
+        "./skills/global-speed-checker"
+      ]
     }
   ]
 }
