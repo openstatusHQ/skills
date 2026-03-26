@@ -21,7 +21,8 @@
         "./skills/postmortem",
         "./skills/maintenance",
         "./skills/status-report",
-        "./skills/global-speed-checker"
+        "./skills/global-speed-checker",
+        "./skills/status-page-ui"
       ]
     }
   ]

@@ -14,6 +14,7 @@ Write better incident updates, postmortems, maintenance announcements, and statu
 | [`maintenance`](skills/maintenance/) | Write planned maintenance announcements (scheduled, in-progress, completed, extended, cancelled) | Vendor-agnostic |
 | [`status-report`](skills/status-report/) | Write periodic health reports (weekly, monthly, quarterly) with uptime metrics and trends | Vendor-agnostic |
 | [`global-speed-checker`](skills/global-speed-checker/) | Run global performance checks from multiple regions using OpenStatus | OpenStatus-specific |
+| [`status-page-ui`](skills/status-page-ui/) | Build a custom status page UI with OpenStatus components, React widget, or SDK | OpenStatus-specific |
 
 ## Installation
 
