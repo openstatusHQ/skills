@@ -22,7 +22,8 @@
         "./skills/maintenance",
         "./skills/status-report",
         "./skills/global-speed-checker",
-        "./skills/status-page-ui"
+        "./skills/status-page-ui",
+        "./skills/openstatus-theme"
       ]
     }
   ]
