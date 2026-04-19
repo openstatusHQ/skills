@@ -1,0 +1,86 @@
+{
+  "skill_name": "openstatus-theme",
+  "evals": [
+    {
+      "id": "design-from-scratch",
+      "prompt": "I want to contribute a new theme to openstatus. I'm thinking something Solarized-inspired — warm beige background, muted terminal feel. Help me build it and open a PR.",
+      "expected_output": "Should clarify intent (confirm contribution path), design the palette in stages (base, brand, status, charts), propose OKLCH values with rationale, write packages/theme-store/src/solarized.ts, update index.ts, and outline PR steps (branch name, title, description).",
+      "assertions": [
+        "Clarifies this is a contribution, not a personal customization",
+        "Proposes palette in stages rather than dumping all 50 values",
+        "Uses OKLCH color space with explanation",
+        "Creates file at packages/theme-store/src/solarized.ts (or similar kebab-case)",
+        "Theme object uses `as const satisfies Theme`",
+        "Imports Theme type from ./types",
+        "Registers the new theme in packages/theme-store/src/index.ts THEMES_LIST",
+        "Provides PR title, branch name, and description template"
+      ],
+      "files": []
+    },
+    {
+      "id": "import-explorer-export",
+      "prompt": "I configured a theme on themes.openstatus.dev and want to wire it into the repo. Here's the export:\n\n```\nid: sunset\nname: Sunset\nauthor: @alice, https://alice.dev\nlight:\n  --background: oklch(98% 0.02 80)\n  --foreground: oklch(22% 0.04 30)\n  --primary: oklch(55% 0.2 30)\n  --success: oklch(68% 0.18 150)\n  --warning: oklch(78% 0.17 70)\n  --destructive: oklch(58% 0.24 27)\n  --info: oklch(60% 0.19 260)\ndark:\n  --background: oklch(16% 0.03 30)\n  --foreground: oklch(95% 0.02 80)\n  --primary: oklch(70% 0.2 30)\n  --success: oklch(72% 0.19 150)\n  --warning: oklch(78% 0.17 70)\n  --destructive: oklch(70% 0.19 22)\n  --info: oklch(62% 0.19 260)\n```",
+      "expected_output": "Should convert the pasted config into a valid TypeScript file at packages/theme-store/src/sunset.ts, preserve the values exactly, structure with `as const satisfies Theme`, and register in index.ts. Should also mention the next steps for testing and PR.",
+      "assertions": [
+        "Creates file at packages/theme-store/src/sunset.ts",
+        "Preserves all pasted color values exactly (no silent edits)",
+        "Sets id: \"sunset\", name: \"Sunset\", correct author object",
+        "Uses `as const satisfies Theme` with Theme imported from ./types",
+        "Updates THEMES_LIST in index.ts with an import + append",
+        "Mentions local testing steps (pnpm dev:status-page, sessionStorage tip)"
+      ],
+      "files": []
+    },
+    {
+      "id": "personal-customization",
+      "prompt": "I'm self-hosting openstatus and just want to change the colors to match my brand (primary #ff5722, dark blue #0a2540 backgrounds). Not planning to submit a PR. What's the simplest path?",
+      "expected_output": "Should recognize this is personal-not-contribution, offer the scaffold as a local theme in packages/theme-store/src/ but skip PR guidance, explain how to select it locally. Should NOT push contribution workflow.",
+      "assertions": [
+        "Recognizes 'personal' path and skips PR-specific steps",
+        "Still scaffolds a theme file with proper Theme shape",
+        "Generates both light and dark mode values (not just one)",
+        "Explains how to preview locally (dev:status-page + sessionStorage)",
+        "Does not assume or suggest opening a pull request"
+      ],
+      "files": []
+    },
+    {
+      "id": "accessibility-validation",
+      "prompt": "Here's my theme in progress — can you check if it's accessible?\n\n```typescript\nexport const MY_THEME = {\n  id: \"foggy\",\n  name: \"Foggy\",\n  author: { name: \"@bob\", url: \"https://bob.dev\" },\n  light: {\n    \"--background\": \"oklch(90% 0 0)\",\n    \"--foreground\": \"oklch(65% 0 0)\",\n    \"--success\": \"oklch(75% 0.1 150)\",\n    \"--warning\": \"oklch(78% 0.1 90)\",\n    \"--destructive\": \"oklch(72% 0.1 30)\",\n    \"--info\": \"oklch(70% 0.1 220)\"\n  },\n  dark: {\n    \"--background\": \"oklch(20% 0 0)\",\n    \"--foreground\": \"oklch(85% 0 0)\"\n  }\n} as const;\n```",
+      "expected_output": "Should flag specific problems: foreground vs background contrast in light mode is too low (L 90 vs L 65 ≈ 2.5:1, fails AA), status colors are all in a narrow lightness range so they'd look similar under colorblind simulation, dark mode is missing status colors entirely. Propose concrete fixes.",
+      "assertions": [
+        "Identifies low contrast between light-mode background and foreground",
+        "Notes that status colors are too close in lightness/chroma to be distinguishable",
+        "Flags that dark mode is missing --success/--warning/--destructive/--info",
+        "Proposes concrete OKLCH adjustments (specific numbers, not vague advice)",
+        "Does NOT just rubber-stamp the theme as accessible"
+      ],
+      "files": []
+    },
+    {
+      "id": "rejects-unrelated-request",
+      "prompt": "I want to change the font on my status page to Inter",
+      "expected_output": "Should recognize this is not a theme (theme-store only handles color CSS variables, not typography) and redirect the user to the right place (apps/status-page/src/app/globals.css or the Next.js font setup).",
+      "assertions": [
+        "Does not scaffold a theme file",
+        "Explains that theme-store controls colors/radius, not typography",
+        "Points user to where font configuration lives (apps/status-page)"
+      ],
+      "files": []
+    },
+    {
+      "id": "brand-colors-to-full-palette",
+      "prompt": "My company's brand colors are #0066ff (primary blue) and #00cc88 (secondary green). Generate a complete openstatus theme from those.",
+      "expected_output": "Should take the two brand colors and derive a full coherent palette: pick neutral backgrounds (white/off-white light, near-black dark), use #0066ff as --primary, possibly reuse the green as --success, pick sensible --warning and --destructive that don't clash with the brand blue, propose both modes. Write the file and register it.",
+      "assertions": [
+        "Uses #0066ff as --primary (not silently replaced with a different color)",
+        "Uses the green #00cc88 meaningfully (either --success or --secondary, with rationale)",
+        "Picks neutral low-chroma backgrounds rather than tinting heavily",
+        "Provides all four status colors (--success, --warning, --destructive, --info)",
+        "Covers both light and dark mode",
+        "Writes a registered theme file"
+      ],
+      "files": []
+    }
+  ]
+}
