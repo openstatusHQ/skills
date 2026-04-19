@@ -15,6 +15,7 @@ Write better incident updates, postmortems, maintenance announcements, and statu
 | [`status-report`](skills/status-report/) | Write periodic health reports (weekly, monthly, quarterly) with uptime metrics and trends | Vendor-agnostic |
 | [`global-speed-checker`](skills/global-speed-checker/) | Run global performance checks from multiple regions using OpenStatus | OpenStatus-specific |
 | [`openstatus-theme`](skills/openstatus-theme/) | Design, scaffold, and contribute a status-page theme to `@openstatus/theme-store` | OpenStatus-specific |
+| [`status-page-ui`](skills/status-page-ui/) | Build a custom status page UI with OpenStatus components, React widget, or SDK | OpenStatus-specific |
 
 ## Installation
 
