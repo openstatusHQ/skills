@@ -1,6 +1,6 @@
 ---
 name: openstatus-theme
-version: 0.2.0
+version: 0.1.1
 description: Design, scaffold, and contribute a community theme to openstatus (the open-source status page). Use whenever the user wants to create a new theme, customize status-page colors, build a palette for their brand, fork and contribute to openstatus's `@openstatus/theme-store`, or mentions OKLCH colors, CSS variables, or themes.openstatus.dev. Also use when the user pastes a theme export or a "Copy prompt" brief from the live explorer (themes.openstatus.dev), whether they want a pasteable JSON theme back or the theme wired into the repo.
 ---
 
