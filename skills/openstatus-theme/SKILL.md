@@ -1,7 +1,7 @@
 ---
 name: openstatus-theme
-version: 0.1.0
-description: Design, scaffold, and contribute a community theme to openstatus (the open-source status page). Use whenever the user wants to create a new theme, customize status-page colors, build a palette for their brand, fork and contribute to openstatus's `@openstatus/theme-store`, or mentions OKLCH colors, CSS variables, or themes.openstatus.dev. Also use when the user pastes a theme export from the live explorer and wants it wired into the repo.
+version: 0.1.1
+description: Design, scaffold, and contribute a community theme to openstatus (the open-source status page). Use whenever the user wants to create a new theme, customize status-page colors, build a palette for their brand, fork and contribute to openstatus's `@openstatus/theme-store`, or mentions OKLCH colors, CSS variables, or themes.openstatus.dev. Also use when the user pastes a theme export or a "Copy prompt" brief from the live explorer (themes.openstatus.dev), whether they want a pasteable JSON theme back or the theme wired into the repo.
 ---
 
 # OpenStatus Theme
@@ -39,11 +39,25 @@ Ask two quick questions if not obvious from context:
    - **Contribution** — they want to open a PR against openstatus. Full workflow applies.
    - **Both** — start as personal, graduate to contribution when happy.
 2. **Do they already have a palette?** Three sources:
-   - **Exported config** from [themes.openstatus.dev](https://themes.openstatus.dev/?b=true) (builder mode). If so, ask them to paste it.
+   - **Exported config** from [themes.openstatus.dev](https://themes.openstatus.dev/?b=true) (builder mode) — the builder copies a theme as a TypeScript file, JSON or CSS, and its **Copy prompt** button produces a brief that ends up here. If so, ask them to paste it.
    - **Existing design system / brand guide** — hex codes, Figma, a reference site. Extract what they have.
    - **From scratch** — help them design. Start by asking for mood, inspiration, or a reference theme.
 
 Mention the live explorer once — "You can also use [themes.openstatus.dev](https://themes.openstatus.dev/?b=true) in builder mode to pick colors visually and export; I can wire the export into the repo for you." — don't push it if they'd rather stay in the terminal.
+
+**Not in the openstatus repo?** Then the deliverable is a theme the user can preview, not files. Skip stages 2 and 5–9: design the palette, then reply with exactly one `json` code block in the shape below. The user pastes it into the builder (**Paste**) to preview it, and **Test it** renders it on a full status page.
+
+```json
+{
+  "id": "kebab-case-id",
+  "name": "Display Name",
+  "author": { "name": "@handle", "url": "https://..." },
+  "light": { "--background": "oklch(100% 0 0)", "--foreground": "oklch(14.5% 0 0)" },
+  "dark": { "--background": "oklch(14.5% 0 0)", "--foreground": "oklch(98.5% 0 0)" }
+}
+```
+
+The builder also accepts the TypeScript theme file and `:root { } / .dark { }` CSS blocks, but JSON is the safest hand-off. Unknown variables are dropped on paste, so stick to the names in `references/theme-spec.md`.
 
 ### 2. Locate the Theme Store
 
@@ -120,8 +134,9 @@ From the repo root:
 pnpm dev:status-page
 ```
 
-Two ways to preview:
+Three ways to preview:
 
+- **Hosted builder, no checkout** — paste the theme (JSON, the `.ts` file or CSS) into [themes.openstatus.dev](https://themes.openstatus.dev/?b=true) with **Paste**; **Test it** renders the draft on a full status page. Fastest loop while iterating on colors.
 - **Explorer** — `http://localhost:3000` shows the grid of all themes. The new one should appear.
 - **Real status page** — `http://localhost:3000/status` renders a seeded status page. In the browser devtools, run `sessionStorage.setItem("community-theme", "true")` once to unlock the theme picker on non-default pages, then reload.
 
@@ -132,8 +147,7 @@ Check every component at least once: monitor list, region map, response-time cha
 Before opening a PR:
 
 ```bash
-pnpm lint       # biome
-pnpm typecheck  # or run tsc in packages/theme-store
+pnpm verify     # oxfmt + oxlint + deno check, no database needed
 ```
 
 If the skill is being used by an external contributor who may not have run these before, briefly explain what each does rather than just telling them to run it.
@@ -176,4 +190,4 @@ interface Theme {
 - **Match the house style.** Look at an existing theme (`openstatus.ts`, `supabase.ts`, `dracula.ts`) before writing. If the repo uses OKLCH, use OKLCH. If the neighbor theme uses hex, hex is fine too.
 - **Respect `var(--x)` chains.** Don't expand variables the user wrote as references — preserve them for readability.
 - **Never silently skip the registry step.** A theme that isn't in `THEMES_LIST` won't appear anywhere. If you write the file but forget to register, the user gets a confusing "my theme doesn't show up" bug.
-- **Treat the live explorer as complementary, not canonical.** The repo is the source of truth. Exports from themes.openstatus.dev are a convenience input, not a replacement for the PR.
+- **Treat the live explorer as complementary, not canonical.** The repo is the source of truth. Exports from themes.openstatus.dev are a convenience input, not a replacement for the PR — but it is the fastest preview loop: a JSON reply pasted into the builder shows the theme in seconds, without a checkout.

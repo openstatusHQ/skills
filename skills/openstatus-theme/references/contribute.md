@@ -20,6 +20,7 @@ Use this checklist before opening a PR to `openstatusHQ/openstatus` with a new t
 
 ## Visual checks
 
+- [ ] Pasted into the hosted builder at themes.openstatus.dev (**Paste**) and previewed with **Test it** — no checkout needed for this pass
 - [ ] Explorer grid (`http://localhost:3000`) renders the theme card correctly
 - [ ] Status page (`http://localhost:3000/status`) with `sessionStorage.setItem("community-theme", "true")` shows the theme live
 - [ ] Light mode checked: monitor list, incident card, maintenance card, charts, regional map, operational/degraded/outage badges
@@ -35,8 +36,7 @@ Use this checklist before opening a PR to `openstatusHQ/openstatus` with a new t
 
 ## Repo checks
 
-- [ ] `pnpm lint` passes
-- [ ] `pnpm typecheck` (or the equivalent) passes
+- [ ] `pnpm verify` passes (oxfmt, oxlint, deno check)
 - [ ] No new runtime warnings in the console when loading the explorer
 
 ## PR

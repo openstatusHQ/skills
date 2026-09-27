@@ -81,6 +81,20 @@
         "Writes a registered theme file"
       ],
       "files": []
+    },
+    {
+      "id": "preview-without-checkout",
+      "prompt": "Design a theme for my openstatus status page.\n\n## Brief\n\nNord palette, calm and cool. Both modes.\n\n## Output\n\nReply with exactly one ```json code block containing the theme, nothing else in it. I will paste it into the theme builder at https://themes.openstatus.dev/?b=true (Paste) to preview it on a status page.",
+      "expected_output": "Should recognise the user is not in an openstatus checkout and wants a pasteable result: design the palette, then reply with a single json code block containing id, name, author, light and dark using only supported variable names. No files, no registry step, no PR instructions.",
+      "assertions": [
+        "Replies with exactly one json code block",
+        "Object has id, name, author, light and dark keys",
+        "Uses only variable names from references/theme-spec.md",
+        "Both light and dark are populated and tuned separately",
+        "Does not create or edit files or mention THEMES_LIST",
+        "Optionally mentions the explorer's Test it button for a full-page preview"
+      ],
+      "files": []
     }
   ]
 }
