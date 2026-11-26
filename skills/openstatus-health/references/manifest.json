@@ -1,0 +1,93 @@
+{
+  "skill": "openstatus-health",
+  "schema": 1,
+  "checkedAt": "2026-11-14",
+  "notes": "Versions the reference files were written against. scripts/check-freshness.mjs compares live npm and GitHub data with these records.",
+  "sources": {
+    "health": {
+      "npm": "@openstatus/health",
+      "verified": "0.1.4",
+      "verifiedMajor": 0,
+      "verifiedAt": "2026-11-14",
+      "repo": "openstatusHQ/health",
+      "commit": "dd98e237d9336b5f603fd60e7c07c1c19e74d65d",
+      "docs": "https://github.com/openstatusHQ/health",
+      "releaseFeed": "https://api.github.com/repos/openstatusHQ/health/commits/main",
+      "catalogSync": "scripts/sync-probes.mjs",
+      "trackCommit": true,
+      "checkedAt": "2026-11-14"
+    },
+    "nextjs": {
+      "npm": "next",
+      "verified": "16.4.6",
+      "verifiedMajor": 16,
+      "verifiedAt": "2026-11-14",
+      "docs": "https://nextjs.org/docs/app/api-reference/file-conventions/route",
+      "releaseFeed": "https://api.github.com/repos/vercel/next.js/releases/latest",
+      "reference": "references/nextjs.md",
+      "legacy": {
+        "adapter": "@openstatus/health-next",
+        "peer": "^14.0.0 || ^15.0.0"
+      }
+    },
+    "astro": {
+      "npm": "astro",
+      "verified": "7.4.12",
+      "verifiedMajor": 7,
+      "verifiedAt": "2026-11-14",
+      "docs": "https://docs.astro.build/en/guides/endpoints/",
+      "releaseFeed": "https://api.github.com/repos/withastro/astro/releases/latest",
+      "reference": "references/astro.md"
+    },
+    "nuxt": {
+      "npm": "nuxt",
+      "verified": "4.6.4",
+      "verifiedMajor": 4,
+      "verifiedAt": "2026-11-14",
+      "docs": "https://nuxt.com/docs/guide/directory-structure/server",
+      "releaseFeed": "https://api.github.com/repos/nuxt/nuxt/releases/latest",
+      "reference": "references/vue-nuxt.md",
+      "transitive": {
+        "h3": "1.15.11",
+        "nitro": "2.13.6"
+      }
+    },
+    "h3": {
+      "npm": "h3",
+      "verified": "2.0.8",
+      "verifiedMajor": 2,
+      "verifiedAt": "2026-11-14",
+      "docs": "https://h3.dev/guide/basics/handler",
+      "releaseFeed": "https://api.github.com/repos/unjs/h3/releases/latest",
+      "reference": "references/vue-nuxt.md"
+    },
+    "nitropack": {
+      "npm": "nitropack",
+      "verified": "2.13.6",
+      "verifiedMajor": 2,
+      "verifiedAt": "2026-11-14",
+      "docs": "https://nitro.build/docs/routing",
+      "releaseFeed": "https://api.github.com/repos/nitrojs/nitro/releases/latest",
+      "reference": "references/vue-nuxt.md"
+    },
+    "nestjs": {
+      "npm": "@nestjs/core",
+      "verified": "12.5.0",
+      "verifiedMajor": 12,
+      "verifiedAt": "2026-11-14",
+      "docs": "https://docs.nestjs.com/controllers",
+      "releaseFeed": "https://api.github.com/repos/nestjs/nest/releases/latest",
+      "reference": "references/nestjs.md"
+    },
+    "node": {
+      "runtime": "node",
+      "verified": "22",
+      "verifiedMajor": 22,
+      "verifiedAt": "2026-11-14",
+      "docs": "https://nodejs.org/api/http.html",
+      "releaseFeed": "https://api.github.com/repos/nodejs/node/releases/latest",
+      "reference": "references/node.md",
+      "allowNewerMajor": true
+    }
+  }
+}

@@ -16,6 +16,7 @@ Write better incident updates, postmortems, maintenance announcements, and statu
 | [`global-speed-checker`](skills/global-speed-checker/) | Run global performance checks from multiple regions using OpenStatus | OpenStatus-specific |
 | [`openstatus-theme`](skills/openstatus-theme/) | Design, scaffold, and contribute a status-page theme to `@openstatus/theme-store` | OpenStatus-specific |
 | [`status-page-ui`](skills/status-page-ui/) | Build a custom status page UI with OpenStatus components, React widget, or SDK | OpenStatus-specific |
+| [`openstatus-health`](skills/openstatus-health/) | Add per-dependency `/health`, `/livez`, and `/readyz` endpoints with `@openstatus/health` on Next.js, Astro, Nuxt, Node.js, and NestJS | OpenStatus-specific |
 
 ## Installation
 
