@@ -1,0 +1,208 @@
+{
+  "skill_name": "openstatus-health",
+  "evals": [
+    {
+      "id": "nextjs-app-router",
+      "prompt": "Add a health endpoint to my Next.js 16 App Router app. It uses Prisma and Redis. Postgres is critical, Redis is not.",
+      "expected_output": "Should read the framework version, use the core createHealthHandler because @openstatus/health-next peers only to 14 and 15, create app/health/route.ts with export const dynamic = \"force-dynamic\", export GET and HEAD, put the probes in a separate registry file, install @openstatus/health-prisma and @openstatus/health-redis, and set Prisma critical.",
+      "assertions": [
+        "Uses createHealthHandler from @openstatus/health, not @openstatus/health-next, for Next.js 16",
+        "Exports `export const dynamic = \"force-dynamic\"`",
+        "Exports both GET and HEAD",
+        "Probes live in a registry file, not inline in route.ts",
+        "prismaProbe is critical; redisProbe is not critical",
+        "Does not install probes for dependencies the app does not use"
+      ],
+      "files": []
+    },
+    {
+      "id": "astro-ssr",
+      "prompt": "I have an Astro site with the Node adapter. Add /health that checks my Postgres pool.",
+      "expected_output": "Should create src/pages/health.ts, set export const prerender = false, export GET and HEAD as APIRoute, pass context.request (not context) to createHealthHandler, and put the postgresProbe in a registry file with the existing pool.",
+      "assertions": [
+        "Creates src/pages/health.ts",
+        "Sets `export const prerender = false`",
+        "Passes `context.request` to the core handler, not the APIContext",
+        "Exports GET and HEAD",
+        "Uses postgresProbe with the existing pool, not a new one",
+        "Does not set `path` on the core handler inside the route"
+      ],
+      "files": []
+    },
+    {
+      "id": "nuxt-nitro",
+      "prompt": "Add a health route to my Nuxt 4 app. It uses Drizzle. Must be a server route.",
+      "expected_output": "Should create server/routes/health.ts, bridge the Fetch handler with fromWebHandler from h3, import the probes from server/health/probes.ts, and confirm the route is not in a page or client component.",
+      "assertions": [
+        "Creates server/routes/health.ts, not a page or component",
+        "Uses fromWebHandler from h3 to bridge createHealthHandler",
+        "Registry lives in server/health/probes.ts",
+        "Uses drizzleProbe with the existing database client",
+        "Mentions disabling route caching or prerender for /health",
+        "Does not place the endpoint in a client bundle"
+      ],
+      "files": []
+    },
+    {
+      "id": "node-http",
+      "prompt": "Plain Node 22 server using node:http. Add /health and /readyz.",
+      "expected_output": "Should use createHealthResponder, check the path and method manually, send 405 with allow: GET, HEAD, drop the body on HEAD, mount /readyz with deadlineMs and cacheFailuresMs: 0, and keep one shared client.",
+      "assertions": [
+        "Uses createHealthResponder for the custom Node adapter",
+        "Checks the path and method before calling respond",
+        "Returns 405 with `allow: GET, HEAD` for other methods",
+        "Drops the body on HEAD",
+        "Sets deadlineMs and cacheFailuresMs: 0 on readiness",
+        "Does not create a database client per request"
+      ],
+      "files": []
+    },
+    {
+      "id": "nestjs",
+      "prompt": "NestJS 12 app with Prisma. Add GET and HEAD /health using the existing PrismaService.",
+      "expected_output": "Should write a small adapter over createHealthResponder, inject the probe array via a provider token built from PrismaService, use @Get and @Head with @Res(), set status and headers from the responder, and note the global prefix and auth guard caveats.",
+      "assertions": [
+        "Uses createHealthResponder, since there is no Nest adapter package",
+        "Injects probes through a provider token, not by importing clients in the controller",
+        "Uses @Get and @Head with @Res()",
+        "Sets status, headers and body from the responder result",
+        "Mentions setGlobalPrefix or a global auth guard exemption",
+        "Does not build a new Prisma client per request"
+      ],
+      "files": []
+    },
+    {
+      "id": "degraded-alerting",
+      "prompt": "My Redis probe fails but the app still works. Kubernetes keeps the pod in rotation and my monitor does not alert. What is wrong?",
+      "expected_output": "Should explain that a failed non-critical probe reports degraded with HTTP 200 by design, that a status-code-only monitor never sees it, and that the monitor must assert on the body `\"status\":\"ok\"` to alert on degraded before it becomes unhealthy.",
+      "assertions": [
+        "Explains degraded returns HTTP 200",
+        "Explains the difference between critical (503) and non-critical (200) failures",
+        "Tells the user to assert on the response body, not only the status code",
+        "Suggests alerting on degraded at lower severity than unhealthy",
+        "Does not tell the user to make Redis critical just to get a 503"
+      ],
+      "files": []
+    },
+    {
+      "id": "public-endpoint-hardening",
+      "prompt": "My /health is public on the internet. How do I stop it leaking my database hostname and dependency list?",
+      "expected_output": "Should set exposeChecks: false for a fully public route, or a function of the request for a token-gated route, keep formatError: \"generic\", and note that extend output is hidden when checks are hidden.",
+      "assertions": [
+        "Sets `exposeChecks: false` or a token-gated function",
+        "Keeps `formatError: \"generic\"`",
+        "Explains that extend output is hidden when checks are hidden",
+        "Does not recommend end-user authentication for the health endpoint",
+        "Does not recommend returning full error messages on a public route"
+      ],
+      "files": []
+    },
+    {
+      "id": "liveness-readiness-split",
+      "prompt": "Set up /livez and /readyz for Kubernetes. The readiness check currently hangs for 30 seconds when the database is down.",
+      "expected_output": "Should mount two routes, give liveness an empty probe list, give readiness the real probes with deadlineMs below timeoutSeconds and cacheFailuresMs: 0, and explain that a hung round must not outlast the Kubernetes timeout.",
+      "assertions": [
+        "Liveness uses an empty probe list",
+        "Readiness uses the real probes",
+        "Readiness sets a deadlineMs below the orchestrator timeout",
+        "Readiness sets cacheFailuresMs: 0 so recovery is visible",
+        "Explains why deadlineMs must be shorter than timeoutSeconds",
+        "Does not run real dependencies on the liveness route"
+      ],
+      "files": []
+    },
+    {
+      "id": "reject-client-side-placement",
+      "prompt": "I have a Vue 3 SPA built with Vite. Add /health there so it checks my backend database.",
+      "expected_output": "Should explain that a Vue SPA runs in the browser and cannot host an HTTP health endpoint or see the server database, and offer Nuxt/Nitro, a separate Node server, or a separate backend service.",
+      "assertions": [
+        "Rejects putting the health endpoint in the Vue client bundle",
+        "Explains that the SPA has no server process to run probes",
+        "Offers Nuxt/Nitro or a separate Node server",
+        "Does not write a probe that reads a secret in client code",
+        "Does not pretend a client-side route can check a database"
+      ],
+      "files": []
+    },
+    {
+      "id": "bootstrap-from-deps",
+      "prompt": "New Express project. Here is my package.json dependencies: @prisma/client, ioredis, stripe, zod. Set up health probes.",
+      "expected_output": "Should map @prisma/client, ioredis and stripe to their probe packages, skip zod, mark Prisma critical, mark Redis and Stripe non-critical, install only the matched probe packages plus the Express adapter, and write one registry file plus app.use(healthRoute(...)).",
+      "assertions": [
+        "Maps @prisma/client to @openstatus/health-prisma",
+        "Maps ioredis to @openstatus/health-redis",
+        "Maps stripe to @openstatus/health-stripe",
+        "Marks Prisma critical and Redis/Stripe non-critical",
+        "Does not install a probe package for zod",
+        "Writes one registry file and mounts healthRoute from @openstatus/health-express"
+      ],
+      "files": []
+    },
+    {
+      "id": "audit-existing-boolean-health",
+      "prompt": "My app/api/health/route.ts returns { ok: true } on 200 and { ok: false } on 500 depending on a raw SQL query. Migrate it to @openstatus/health without breaking my monitor.",
+      "expected_output": "Should keep the URL and the 200/503 contract, keep the `ok` field through extend or a small response wrapper, replace the raw check with real probes, keep force-dynamic, and flag the 500-to-503 change if needed.",
+      "assertions": [
+        "Keeps the existing route URL",
+        "Preserves the `ok` field for the existing monitor",
+        "Replaces the raw SQL catch with per-dependency probes",
+        "Keeps `export const dynamic = \"force-dynamic\"`",
+        "Does not leave two implementations on /health",
+        "Mentions mapping unhealthyStatusCode to 500 if the old contract required it"
+      ],
+      "files": []
+    },
+    {
+      "id": "refresh-after-new-dependency",
+      "prompt": "I added @upstash/redis to my Next.js app after you set up health. Update the probes.",
+      "expected_output": "Should run audit mode, map @upstash/redis to @openstatus/health-upstash with upstashProbe, reuse the existing Upstash client, add one line to the registry, keep it non-critical, and leave the route unchanged.",
+      "assertions": [
+        "Maps @upstash/redis to @openstatus/health-upstash",
+        "Uses upstashProbe with the existing client or REST url and token",
+        "Adds the probe to the existing registry, not inline in the route",
+        "Keeps the probe non-critical by default",
+        "Does not rewrite the route file"
+      ],
+      "files": []
+    },
+    {
+      "id": "coverage-warning",
+      "prompt": "Run the optional coverage check. package.json has pg and stripe, and src/health/probes.ts only has stripeProbe.",
+      "expected_output": "Should report postgres as a missing critical probe and stripe as covered, exit non-zero, and tell the user to add postgresProbe. Should use the scaffolded script only because the user asked for drift protection.",
+      "assertions": [
+        "Detects pg as an uncovered critical dependency",
+        "Reports stripeProbe as covered",
+        "Exits non-zero for the missing critical probe",
+        "Names @openstatus/health-postgres and postgresProbe in the fix",
+        "Does not add unrelated probe packages"
+      ],
+      "files": []
+    },
+    {
+      "id": "custom-probe-uncovered-dependency",
+      "prompt": "My health endpoint needs to check an internal queue service at QUEUE_URL. There is no OpenStatus probe package for it.",
+      "expected_output": "Should write a custom probe with probe() or httpProbe(), honour the AbortSignal, use skip when QUEUE_URL is missing, keep it non-critical unless the product cannot serve without it, and test it with the doubles from @openstatus/health/testing.",
+      "assertions": [
+        "Writes a custom probe with probe() or httpProbe()",
+        "Passes `signal` to fetch or otherwise honours the abort signal",
+        "Uses `skip` when the dependency is not configured",
+        "Defaults to non-critical unless the user says otherwise",
+        "Mentions fakeFetch or hangFetch for testing"
+      ],
+      "files": []
+    },
+    {
+      "id": "stale-framework-major-warning",
+      "prompt": "My project uses Next.js 17. Your reference was verified against Next.js 16. Add the health route.",
+      "expected_output": "Should run the freshness gate, notice the newer major, fetch the release notes and route-handler docs, adapt the pattern if the API changed, and warn that the reference was verified against Next.js 16. Should not silently apply the stale pattern or claim it was verified.",
+      "assertions": [
+        "Compares the project version with verifiedMajor in references/manifest.json",
+        "Warns that the reference was verified against Next.js 16",
+        "Checks the official docs or release notes for a newer major",
+        "Does not claim the pattern was verified for Next.js 17",
+        "Keeps the core invariants: force-dynamic, GET and HEAD, probes in a registry"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Status page & incident communication skills for AI agents — by OpenStatus",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "repository": "https://github.com/openstatusHQ/skills"
   },
   "plugins": [
@@ -23,7 +23,8 @@
         "./skills/status-report",
         "./skills/global-speed-checker",
         "./skills/status-page-ui",
-        "./skills/openstatus-theme"
+        "./skills/openstatus-theme",
+        "./skills/openstatus-health"
       ]
     }
   ]
